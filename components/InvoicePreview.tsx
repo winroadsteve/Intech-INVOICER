@@ -91,10 +91,25 @@ const InvoicePreview: React.FC<Props> = ({ invoice, businessInfo }) => {
 
       {/* Footer / Totals */}
       <div className="border-t-2 border-slate-100 pt-8 mt-auto">
-        <div className="flex justify-between items-start gap-12">
-          <div className="max-w-md">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Notes & Terms</h3>
-            <p className="text-sm text-slate-600 leading-relaxed italic">{invoice.notes || 'No specific notes for this invoice.'}</p>
+        <div className="flex flex-col md:flex-row justify-between items-start gap-12">
+          <div className="max-w-md space-y-6">
+            <div>
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Payment Details</h3>
+              <div className="text-sm text-slate-700 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                <div className="flex justify-between mb-1">
+                  <span className="text-slate-400">Bank Name:</span>
+                  <span className="font-bold">{businessInfo.bankName || 'Zenith Bank'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Account Number:</span>
+                  <span className="font-bold">{businessInfo.accountNumber || '1234567890'}</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Notes & Terms</h3>
+              <p className="text-sm text-slate-600 leading-relaxed italic">{invoice.notes || 'No specific notes for this invoice.'}</p>
+            </div>
           </div>
           <div className="w-64 space-y-3">
             <div className="flex justify-between text-slate-500">

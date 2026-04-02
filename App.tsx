@@ -1,8 +1,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import { 
   Plus, Save, Printer, ArrowLeft, FileText, History, Wand2, 
-  Sparkles, Settings, Upload, X, Check, Download, Database, FileUp 
+  Sparkles, Settings, Upload, X, Check, Download, Database, FileUp, Image as ImageIcon 
 } from 'lucide-react';
 import { Invoice, InvoiceItem, BusinessInfo } from './types';
 import { DEFAULT_INTECH_INFO, DEFAULT_TAX_RATE } from './constants';
@@ -130,6 +132,55 @@ const App: React.FC = () => {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!activeInvoice) return;
+    const element = document.getElementById('invoice-preview');
+    if (!element) return;
+
+    try {
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'px',
+        format: [canvas.width / 2, canvas.height / 2]
+      });
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
+      pdf.save(`Invoice_${activeInvoice.invoiceNumber}.pdf`);
+    } catch (err) {
+      console.error('PDF generation failed:', err);
+      alert('Failed to generate PDF. Please use the Print option as a backup.');
+    }
+  };
+
+  const handleDownloadJPEG = async () => {
+    if (!activeInvoice) return;
+    const element = document.getElementById('invoice-preview');
+    if (!element) return;
+
+    try {
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+      const imgData = canvas.toDataURL('image/jpeg', 0.9);
+      const link = document.createElement('a');
+      link.href = imgData;
+      link.download = `Invoice_${activeInvoice.invoiceNumber}.jpg`;
+      link.click();
+    } catch (err) {
+      console.error('JPEG generation failed:', err);
+      alert('Failed to generate JPEG.');
+    }
   };
 
   const handleExportData = () => {
@@ -361,6 +412,8 @@ const App: React.FC = () => {
                 { label: 'Website', key: 'website' as const, type: 'text' },
                 { label: 'Email Address', key: 'email' as const, type: 'email' },
                 { label: 'Phone Number', key: 'phone' as const, type: 'text' },
+                { label: 'Bank Name', key: 'bankName' as const, type: 'text' },
+                { label: 'Account Number', key: 'accountNumber' as const, type: 'text' },
               ].map((field) => (
                 <div key={field.key} className="space-y-1">
                   <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">{field.label}</label>
@@ -611,14 +664,25 @@ const App: React.FC = () => {
           >
             <ArrowLeft size={20} /> Back to Editor
           </button>
-          <div className="flex flex-col items-end gap-1">
+          <div className="flex flex-wrap justify-end gap-3">
+            <button 
+              onClick={handleDownloadPDF}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-bold transition-all shadow-lg"
+            >
+              <Download size={18} /> Download PDF
+            </button>
+            <button 
+              onClick={handleDownloadJPEG}
+              className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-bold transition-all shadow-lg"
+            >
+              <ImageIcon size={18} /> Download JPEG
+            </button>
             <button 
               onClick={handlePrint}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center gap-2 font-bold transition-all shadow-lg"
+              className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg flex items-center gap-2 font-bold transition-all"
             >
-              <Printer size={18} /> Save as PDF
+              <Printer size={18} /> Print
             </button>
-            <span className="text-[10px] text-slate-400 italic">Select 'Save as PDF' in the destination dropdown.</span>
           </div>
         </div>
 

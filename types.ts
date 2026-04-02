@@ -33,4 +33,6 @@ export interface BusinessInfo {
   phone: string;
   address: string;
   logoUrl?: string;
+  bankName?: string;
+  accountNumber?: string;
 }
