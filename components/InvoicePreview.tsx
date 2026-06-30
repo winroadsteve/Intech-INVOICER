@@ -12,9 +12,17 @@ interface Props {
 const InvoicePreview: React.FC<Props> = ({ invoice, businessInfo }) => {
   const subtotal = calculateSubtotal(invoice.items);
   const total = calculateTotal(subtotal, invoice.taxRate, invoice.discount);
+  const isReceipt = invoice.documentType === 'Receipt';
 
   return (
-    <div id="invoice-preview" className="bg-white p-8 md:p-12 shadow-xl border border-slate-200 max-w-4xl mx-auto min-h-[1000px] flex flex-col print:shadow-none print:border-none print:m-0 print:p-8">
+    <div id="invoice-preview" className="relative bg-white p-8 md:p-12 shadow-xl border border-slate-200 max-w-4xl mx-auto min-h-[1000px] flex flex-col print:shadow-none print:border-none print:m-0 print:p-8 overflow-hidden">
+      {/* Stamp watermark for receipts or Paid status */}
+      {(isReceipt || invoice.status === 'Paid') && (
+        <div className="absolute right-12 top-44 border-4 border-emerald-500/40 text-emerald-500/40 font-black text-4xl tracking-widest px-6 py-2 rounded-xl transform rotate-12 select-none pointer-events-none uppercase z-10">
+          PAID
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex justify-between items-start border-b-2 border-slate-100 pb-8 mb-8">
         <div className="flex gap-6 items-start">
@@ -34,7 +42,9 @@ const InvoicePreview: React.FC<Props> = ({ invoice, businessInfo }) => {
           </div>
         </div>
         <div className="text-right">
-          <h2 className="text-5xl font-bold text-slate-300 mb-4 uppercase">Invoice</h2>
+          <h2 className="text-5xl font-bold text-slate-300 mb-4 uppercase">
+            {isReceipt ? 'Receipt' : 'Invoice'}
+          </h2>
           <div className="text-slate-600 font-bold text-lg">#{invoice.invoiceNumber}</div>
         </div>
       </div>
@@ -42,7 +52,9 @@ const InvoicePreview: React.FC<Props> = ({ invoice, businessInfo }) => {
       {/* Info Grid */}
       <div className="grid grid-cols-2 gap-12 mb-12">
         <div>
-          <h3 className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-4">Bill To:</h3>
+          <h3 className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-4">
+            {isReceipt ? 'Paid By:' : 'Bill To:'}
+          </h3>
           <div className="font-bold text-xl text-slate-800">{invoice.client.name || 'N/A'}</div>
           <div className="text-slate-600 mt-1 whitespace-pre-line">{invoice.client.address || 'Address Not Provided'}</div>
           <div className="text-slate-600 mt-1">{invoice.client.email}</div>
@@ -50,10 +62,25 @@ const InvoicePreview: React.FC<Props> = ({ invoice, businessInfo }) => {
         </div>
         <div className="flex flex-col items-end">
           <div className="grid grid-cols-2 gap-x-8 gap-y-2">
-            <span className="text-slate-400 font-medium">Issue Date:</span>
+            <span className="text-slate-400 font-medium">
+              {isReceipt ? 'Receipt Date:' : 'Issue Date:'}
+            </span>
             <span className="text-slate-800 font-semibold">{formatDate(invoice.date)}</span>
-            <span className="text-slate-400 font-medium">Due Date:</span>
-            <span className="text-slate-800 font-semibold">{formatDate(invoice.dueDate)}</span>
+            
+            {isReceipt ? (
+              <>
+                <span className="text-slate-400 font-medium">Payment Method:</span>
+                <span className="text-slate-800 font-semibold">{invoice.paymentMethod || 'Bank Transfer'}</span>
+                <span className="text-slate-400 font-medium">Date Paid:</span>
+                <span className="text-slate-800 font-semibold">{formatDate(invoice.datePaid || invoice.date)}</span>
+              </>
+            ) : (
+              <>
+                <span className="text-slate-400 font-medium">Due Date:</span>
+                <span className="text-slate-800 font-semibold">{formatDate(invoice.dueDate)}</span>
+              </>
+            )}
+
             <span className="text-slate-400 font-medium">Status:</span>
             <span className={`font-bold px-2 py-0.5 rounded text-xs uppercase text-center ${
               invoice.status === 'Paid' ? 'bg-green-100 text-green-700' : 

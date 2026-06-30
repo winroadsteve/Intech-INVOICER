@@ -27,6 +27,9 @@ const createEmptyInvoice = (): Invoice => ({
   status: 'Draft',
   taxRate: DEFAULT_TAX_RATE,
   discount: 0,
+  documentType: 'Invoice',
+  paymentMethod: 'Bank Transfer',
+  datePaid: new Date().toISOString().split('T')[0],
 });
 
 const App: React.FC = () => {
@@ -295,12 +298,14 @@ const App: React.FC = () => {
                 >
                   <div className="absolute top-0 left-0 w-1 h-full bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   <div className="flex justify-between items-start mb-4">
-                    <span className="text-xs font-bold text-slate-400 tracking-widest uppercase">{inv.invoiceNumber}</span>
+                    <span className="text-xs font-bold text-slate-400 tracking-widest uppercase">
+                      {inv.documentType === 'Receipt' ? 'Receipt' : 'Invoice'} #{inv.invoiceNumber}
+                    </span>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
-                      inv.status === 'Paid' ? 'bg-green-100 text-green-700' : 
+                      inv.status === 'Paid' || inv.documentType === 'Receipt' ? 'bg-green-100 text-green-700' : 
                       inv.status === 'Sent' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700'
                     }`}>
-                      {inv.status}
+                      {inv.documentType === 'Receipt' ? 'Paid' : inv.status}
                     </span>
                   </div>
                   <h4 className="text-lg font-bold text-slate-800 truncate mb-1">{inv.client.name || 'Unnamed Client'}</h4>
@@ -477,37 +482,99 @@ const App: React.FC = () => {
         <main className="max-w-5xl mx-auto px-4 mt-8 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="md:col-span-2 space-y-6">
-              <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                <h3 className="text-sm font-bold text-blue-600 uppercase tracking-widest mb-6">Invoice Metadata</h3>
+              <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-3">
+                  <h3 className="text-sm font-bold text-blue-600 uppercase tracking-widest">Document Configuration</h3>
+                  <div className="flex bg-slate-100 p-0.5 rounded-lg self-end sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={() => updateActiveInvoice({ documentType: 'Invoice' })}
+                      className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
+                        (activeInvoice.documentType || 'Invoice') === 'Invoice'
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'text-slate-600 hover:text-slate-800'
+                      }`}
+                    >
+                      Invoice
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateActiveInvoice({ documentType: 'Receipt', status: 'Paid' })}
+                      className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
+                        activeInvoice.documentType === 'Receipt'
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'text-slate-600 hover:text-slate-800'
+                      }`}
+                    >
+                      Receipt
+                    </button>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-500 uppercase">Invoice #</label>
+                    <label className="text-xs font-semibold text-slate-500 uppercase">
+                      {activeInvoice.documentType === 'Receipt' ? 'Receipt #' : 'Invoice #'}
+                    </label>
                     <input 
                       type="text" 
                       value={activeInvoice.invoiceNumber}
                       onChange={e => updateActiveInvoice({ invoiceNumber: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none" 
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-blue-500" 
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-500 uppercase">Issue Date</label>
+                    <label className="text-xs font-semibold text-slate-500 uppercase">
+                      {activeInvoice.documentType === 'Receipt' ? 'Receipt Date' : 'Issue Date'}
+                    </label>
                     <input 
                       type="date" 
                       value={activeInvoice.date}
                       onChange={e => updateActiveInvoice({ date: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none" 
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-blue-500" 
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-500 uppercase">Due Date</label>
-                    <input 
-                      type="date" 
-                      value={activeInvoice.dueDate}
-                      onChange={e => updateActiveInvoice({ dueDate: e.target.value })}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none" 
-                    />
-                  </div>
+                  
+                  {activeInvoice.documentType === 'Receipt' ? (
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-slate-500 uppercase">Payment Method</label>
+                      <select
+                        value={activeInvoice.paymentMethod || 'Bank Transfer'}
+                        onChange={e => updateActiveInvoice({ paymentMethod: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-blue-500 text-slate-800"
+                      >
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Card / POS">Card / POS</option>
+                        <option value="Online Payment">Online Payment</option>
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-slate-500 uppercase">Due Date</label>
+                      <input 
+                        type="date" 
+                        value={activeInvoice.dueDate}
+                        onChange={e => updateActiveInvoice({ dueDate: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-blue-500" 
+                      />
+                    </div>
+                  )}
                 </div>
+
+                {activeInvoice.documentType === 'Receipt' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-slate-50">
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-slate-500 uppercase">Date Paid</label>
+                      <input 
+                        type="date" 
+                        value={activeInvoice.datePaid || activeInvoice.date}
+                        onChange={e => updateActiveInvoice({ datePaid: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-1 focus:ring-blue-500" 
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">

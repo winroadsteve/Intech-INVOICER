@@ -24,6 +24,9 @@ export interface Invoice {
   status: 'Draft' | 'Sent' | 'Paid';
   taxRate: number;
   discount: number;
+  documentType?: 'Invoice' | 'Receipt';
+  paymentMethod?: string;
+  datePaid?: string;
 }
 
 export interface BusinessInfo {
